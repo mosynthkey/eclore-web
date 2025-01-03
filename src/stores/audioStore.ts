@@ -32,7 +32,7 @@ export const useAudioStore = defineStore('audio', {
 
     togglePlayPause() {
       this.player.togglePlayPause()
-      this.isPlaying = this.player.getIsPlaying()
+      this.isPlaying = !this.isPlaying
     },
 
     play() {

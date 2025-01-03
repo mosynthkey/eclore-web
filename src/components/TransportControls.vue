@@ -1,9 +1,7 @@
 <script setup lang="ts">
-defineProps<{
-    isPlaying: boolean
-    currentTime: number
-    duration: number
-}>()
+import { useAudioStore } from '../stores/audioStore'
+
+const store = useAudioStore()
 
 defineEmits<{
     (e: 'play'): void
@@ -16,14 +14,14 @@ defineEmits<{
 
 <template>
     <div class="transport-controls">
-        <button @click="$emit('toggle-play-pause')">
-            {{ isPlaying ? 'Pause' : 'Play' }}
+        <button @click="store.togglePlayPause">
+            {{ store.isPlaying ? 'Pause' : 'Play' }}
         </button>
-        <button @click="$emit('stop')">Stop</button>
+        <button @click="store.stop">Stop</button>
 
-        <input type="range" :min="0" :max="duration" :value="currentTime" step="0.1"
+        <input type="range" :min="0" :max="store.duration" :value="store.currentTime" step="0.1"
             @input="(e) => $emit('seek', parseFloat((e.target as HTMLInputElement).value))" />
-        <span>{{ currentTime.toFixed(1) }} / {{ duration.toFixed(1) }}</span>
+        <span>{{ store.currentTime.toFixed(1) }} / {{ store.duration.toFixed(1) }}</span>
     </div>
 </template>
 
