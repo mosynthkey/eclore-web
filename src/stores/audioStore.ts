@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Track, Effect } from '../types/audio'
+import type { Track } from '../types/audio'
 import { AudioPlayer } from '../audio/AudioPlayer'
 
 export const useAudioStore = defineStore('audio', {

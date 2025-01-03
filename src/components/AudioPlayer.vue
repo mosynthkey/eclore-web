@@ -43,7 +43,6 @@ onBeforeUnmount(() => {
 
             <EffectsPanel :audio-context="audioStore.player.getAudioContext()" :audio-player="audioStore.player" />
 
-
         </template>
     </div>
 </template>

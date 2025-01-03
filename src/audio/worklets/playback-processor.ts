@@ -1,3 +1,22 @@
+declare var AudioWorkletProcessor: {
+  prototype: AudioWorkletProcessor
+  new (): AudioWorkletProcessor
+}
+declare var registerProcessor: (
+  name: string,
+  processorCtor: typeof AudioWorkletProcessor
+) => void
+declare var sampleRate: number
+
+interface AudioWorkletProcessor {
+  readonly port: MessagePort
+  process(
+    inputs: Float32Array[][],
+    outputs: Float32Array[][],
+    parameters: Record<string, Float32Array>
+  ): boolean
+}
+
 class PlaybackProcessor extends AudioWorkletProcessor {
   private buffer: Float32Array[] | null = null
   private position = 0
@@ -6,7 +25,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
   constructor() {
     super()
     
-    this.port.onmessage = (event) => {
+    this.port.onmessage = (event: MessageEvent) => {
       if (event.data.type === 'loadBuffer') {
         this.buffer = event.data.buffer
       } else if (event.data.type === 'play') {
@@ -20,7 +39,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
     }
   }
 
-  process(inputs: Float32Array[][], outputs: Float32Array[][]) {
+  process(_inputs: Float32Array[][], outputs: Float32Array[][]) {
     if (!this.buffer || !this.isPlaying) return true
 
     const output = outputs[0]
@@ -52,4 +71,5 @@ class PlaybackProcessor extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('playback-processor', PlaybackProcessor) 
+registerProcessor('playback-processor', PlaybackProcessor)
+export default {} 

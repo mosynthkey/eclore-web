@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onBeforeUnmount, watch } from 'vue'
 import { useAudioStore } from './stores/audioStore'
 import WaveformView from './components/WaveformView.vue'
 import TransportControls from './components/TransportControls.vue'

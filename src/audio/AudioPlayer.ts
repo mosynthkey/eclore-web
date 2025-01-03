@@ -3,6 +3,10 @@ import { PlaybackNode } from './worklets/playback-node'
 import { DistortionNode } from './worklets/distortion-node'
 import { DecimatorNode } from './worklets/decimator-node'
 import { ReverbNode } from './worklets/reverb-node'
+import bass from '../assets/music/demo/Bass.mp3'
+import drums from '../assets/music/demo/Drums.mp3'
+import perc from '../assets/music/demo/Perc.mp3'
+import stab from '../assets/music/demo/Stab.mp3'
 
 interface Effect {
   name: string;
@@ -33,6 +37,8 @@ export class AudioPlayer {
     if (!this.audioContext) {
       this.audioContext = new AudioContext()
       try {
+        console.log(this.audioContext);
+        console.log(this.audioContext.audioWorklet);
         await this.audioContext.audioWorklet.addModule('/src/audio/worklets/playback-processor.ts')
         await this.audioContext.audioWorklet.addModule('/src/audio/worklets/distortion-processor.ts')
         await this.audioContext.audioWorklet.addModule('/src/audio/worklets/decimator-processor.ts')
@@ -112,9 +118,27 @@ export class AudioPlayer {
   async loadTrack(filename: string) {
     if (!this.audioContext || !this.mixBus) return
 
-    const response = await fetch(`/src/assets/music/demo/${filename}`)
-    const arrayBuffer = await response.arrayBuffer()
-    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer)
+    let audioUrl: string
+    switch (filename) {
+      case 'Bass.mp3':
+        audioUrl = bass
+        break
+      case 'Drums.mp3':
+        audioUrl = drums
+        break
+      case 'Perc.mp3':
+        audioUrl = perc
+        break
+      case 'Stab.mp3':
+        audioUrl = stab
+        break
+      default:
+        throw new Error(`Unknown track: ${filename}`)
+    }
+
+    const response = await fetch(audioUrl)
+    const audioData = await response.arrayBuffer()
+    const audioBuffer = await this.audioContext.decodeAudioData(audioData)
 
     const playbackNode = new PlaybackNode(this.audioContext)
     playbackNode.loadBuffer(audioBuffer)
@@ -137,8 +161,10 @@ export class AudioPlayer {
     this.tracks.push(track)
     this.duration = Math.max(this.duration, audioBuffer.duration)
     
-    playbackNode.connect(track.gain)
-    track.gain.connect(this.mixBus)
+    if (track.gain && this.mixBus) {
+      playbackNode.connect(track.gain)
+      track.gain.connect(this.mixBus)
+    }
 
     return track
   }
@@ -249,6 +275,9 @@ export class AudioPlayer {
   }
 
   public getAudioContext(): AudioContext {
+    if (!this.audioContext) {
+      throw new Error('AudioContext is not initialized')
+    }
     return this.audioContext
   }
 
