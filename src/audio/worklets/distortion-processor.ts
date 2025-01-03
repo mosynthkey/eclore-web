@@ -8,7 +8,6 @@ class DistortionProcessor extends AudioWorkletProcessor {
       const outputChannel = output[channel]
 
       for (let i = 0; i < inputChannel.length; i++) {
-        // 基本的なディストーション効果を適用
         outputChannel[i] = Math.tanh(inputChannel[i])
       }
     }

@@ -13,7 +13,7 @@ class DecimatorProcessor extends AudioWorkletProcessor {
       for (let i = 0; i < inputChannel.length; i++) {
         if (this.skipSamples <= 0) {
           this.lastSample = inputChannel[i];
-          this.skipSamples = 3; // サンプルレートを1/4に減少
+          this.skipSamples = 4;
         } else {
           this.skipSamples--;
         }

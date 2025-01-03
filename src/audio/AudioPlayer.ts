@@ -2,6 +2,16 @@ import type { Track, LoopRegion } from '../types/audio'
 import { PlaybackNode } from './worklets/playback-node'
 import { DistortionNode } from './worklets/distortion-node'
 import { DecimatorNode } from './worklets/decimator-node'
+import { ReverbNode } from './worklets/reverb-node'
+
+interface Effect {
+  name: string;
+  node: AudioNode;
+  bypass: boolean;
+  output?: AudioNode;
+  bypassGain?: GainNode;
+  wetGain?: GainNode;
+}
 
 export class AudioPlayer {
   private audioContext: AudioContext | null = null
@@ -17,7 +27,7 @@ export class AudioPlayer {
   }
   private playbackNodes: Map<number, PlaybackNode> = new Map()
   private mixBus: GainNode | null = null
-  private effectChain: AudioNode[] = []
+  private effectChain: Effect[] = []
 
   async initAudioContext() {
     if (!this.audioContext) {
@@ -31,20 +41,71 @@ export class AudioPlayer {
         
         const distortion = new DistortionNode(this.audioContext)
         const decimator = new DecimatorNode(this.audioContext)
+        const reverb = new ReverbNode(this.audioContext)
+        
         this.effectChain = [
-          { name: 'Distortion', node: distortion, bypass: true },
-          { name: 'Decimator', node: decimator, bypass: true }
+          {
+            name: 'Distortion',
+            node: distortion,
+            bypass: true,
+            bypassGain: this.audioContext.createGain(),
+            wetGain: this.audioContext.createGain()
+          },
+          {
+            name: 'Decimator',
+            node: decimator,
+            bypass: true,
+            bypassGain: this.audioContext.createGain(),
+            wetGain: this.audioContext.createGain()
+          },
+          {
+            name: 'Reverb',
+            node: reverb.getInput(),
+            output: reverb.getOutput(),
+            bypass: true,
+            bypassGain: this.audioContext.createGain(),
+            wetGain: this.audioContext.createGain()
+          }
         ]
         
-        let currentNode: AudioNode = this.mixBus
+        let previousNode: AudioNode = this.mixBus
         this.effectChain.forEach(effect => {
-          currentNode.connect(effect.node)
-          currentNode = effect.node
+          previousNode.connect(effect.bypassGain!)
+          
+          previousNode.connect(effect.wetGain!)
+          effect.wetGain!.connect(effect.node)
+          
+          const nextNode = this.audioContext!.createGain()
+          
+          effect.bypassGain!.connect(nextNode)
+          if (effect.output) {
+            effect.node.connect(effect.output)
+            effect.output.connect(nextNode)
+          } else {
+            effect.node.connect(nextNode)
+          }
+          
+          previousNode = nextNode
         })
-        currentNode.connect(this.audioContext.destination)
+        
+        previousNode.connect(this.audioContext.destination)
+
+        this.effectChain.forEach(effect => this.updateEffectBypass(effect))
       } catch (error) {
         console.error('Failed to load AudioWorklet:', error)
       }
+    }
+  }
+
+  private updateEffectBypass(effect: Effect) {
+    if (!effect.bypassGain || !effect.wetGain) return
+    
+    if (effect.bypass) {
+      effect.bypassGain.gain.setValueAtTime(1.0, this.audioContext!.currentTime)
+      effect.wetGain.gain.setValueAtTime(0.0, this.audioContext!.currentTime)
+    } else {
+      effect.bypassGain.gain.setValueAtTime(0.0, this.audioContext!.currentTime)
+      effect.wetGain.gain.setValueAtTime(1.0, this.audioContext!.currentTime)
     }
   }
 
@@ -88,26 +149,7 @@ export class AudioPlayer {
     this.animationFrame = requestAnimationFrame(this.updateTime)
   }
 
-  private restartTracks() {
-    if (!this.audioContext) return
-    
-    this.tracks.forEach(track => {
-      const playbackNode = this.playbackNodes.get(track.id)
-      if (!playbackNode) return
-      
-      playbackNode.play(0)
-    })
-  }
-
   async play() {
-    if (!this.audioContext) {
-      await this.initAudioContext()
-      await this.loadTrack('Perc.mp3')
-      await this.loadTrack('Stab.mp3')
-      await this.loadTrack('Bass.mp3')
-      await this.loadTrack('Drums.mp3')
-    }
-
     if (this.audioContext?.state === 'suspended') {
       await this.audioContext.resume()
     }
@@ -115,6 +157,14 @@ export class AudioPlayer {
     this.tracks.forEach(track => this.startTrack(track))
     this.isPlaying = true
     this.updateTime()
+  }
+
+  async togglePlayPause() {
+    if (this.isPlaying) {
+      this.pause()
+    } else {
+      this.play()
+    }
   }
 
   private startTrack(track: Track) {
@@ -185,24 +235,21 @@ export class AudioPlayer {
     const effect = this.effectChain.find(e => e.name === effectName)
     if (effect) {
       effect.bypass = bypass
-      this.reconnectEffectChain()
+      this.updateEffectBypass(effect)
     }
   }
 
-  private reconnectEffectChain() {
-    if (!this.audioContext || !this.mixBus) return
+  public async initialize(): Promise<void> {
+    if (!this.audioContext) {
+      await this.initAudioContext()
+      await this.loadTrack('Perc.mp3')
+      await this.loadTrack('Stab.mp3')
+      await this.loadTrack('Bass.mp3')
+      await this.loadTrack('Drums.mp3')
+    }
+  }
 
-    this.effectChain.forEach(effect => {
-      effect.node.disconnect()
-    })
-
-    let currentNode: AudioNode = this.mixBus
-    this.effectChain.forEach(effect => {
-      if (!effect.bypass) {
-        currentNode.connect(effect.node)
-        currentNode = effect.node
-      }
-    })
-    currentNode.connect(this.audioContext.destination)
+  public getAudioContext(): AudioContext {
+    return this.audioContext
   }
 } 
