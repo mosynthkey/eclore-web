@@ -8,6 +8,10 @@ import drums from '../assets/music/demo/Drums.mp3'
 import perc from '../assets/music/demo/Perc.mp3'
 import stab from '../assets/music/demo/Stab.mp3'
 import { TapeStopNode } from './worklets/tape-stop-node'
+import playbackProcessorUrl from './worklets/playback-processor.ts?worker&url'
+import distortionProcessorUrl from './worklets/distortion-processor.ts?worker&url'
+import decimatorProcessorUrl from './worklets/decimator-processor.ts?worker&url'
+import tapeStopProcessorUrl from './worklets/tape-stop-processor.ts?worker&url'
 
 interface Effect {
   name: string;
@@ -43,10 +47,10 @@ export class AudioPlayer {
       try {
         console.log(this.audioContext);
         console.log(this.audioContext.audioWorklet);
-        await this.audioContext.audioWorklet.addModule('./src/audio/worklets/playback-processor.ts')
-        await this.audioContext.audioWorklet.addModule('./src/audio/worklets/distortion-processor.ts')
-        await this.audioContext.audioWorklet.addModule('./src/audio/worklets/decimator-processor.ts')
-        await this.audioContext.audioWorklet.addModule('./src/audio/worklets/tape-stop-processor.ts')
+        await this.audioContext.audioWorklet.addModule(playbackProcessorUrl)
+        await this.audioContext.audioWorklet.addModule(distortionProcessorUrl)
+        await this.audioContext.audioWorklet.addModule(decimatorProcessorUrl)
+        await this.audioContext.audioWorklet.addModule(tapeStopProcessorUrl)
         
         this.mixBus = this.audioContext.createGain()
         this.analyser = this.audioContext.createAnalyser()
