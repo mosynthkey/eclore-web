@@ -1,5 +1,25 @@
-# Vue 3 + TypeScript + Vite
+Prototype of multi-channel audio player with effect and visual effect.
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## Installation
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/mosynthkey/eclore-web
+    ```
+2. Navigate to the project directory:
+    ```bash
+    cd eclore-web
+    ```
+3. Install the dependencies:
+    ```bash
+    npm install
+    ```
+
+## Usage
+
+1. Start the development server:
+    ```bash
+    npm run dev
+    ```
+2. Open your browser and navigate to `http://localhost:XXXX` to view the application.
+   XXXX is the port number that is displayed in the terminal.
