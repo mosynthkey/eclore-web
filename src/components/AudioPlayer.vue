@@ -44,7 +44,7 @@ onBeforeUnmount(() => {
             <div>{{ currentPlayingTimeRatio }}</div>
             <TransportControls :is-playing="player.getIsPlaying()" :current-time="player.getCurrentTime()"
                 :duration="player.getDuration()" @play="player.play()" @pause="player.pause()" @stop="player.stop()"
-                @seek="player.seek" @toggle-play-pause="player.togglePlayPause()" />
+                @seek="(time) => player.seek(time)" @toggle-play-pause="player.togglePlayPause()" />
 
             <div class="tracks">
                 <TrackControls v-for="track in player.getTracks()" :key="track.id" :track="track"

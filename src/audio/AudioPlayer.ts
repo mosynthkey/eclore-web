@@ -27,7 +27,7 @@ export class AudioPlayer {
   }
   private playbackNodes: Map<number, PlaybackNode> = new Map()
   private mixBus: GainNode | null = null
-  private effectChain: Effect[] = []
+  public effectChain: Effect[] = []
 
   async initAudioContext() {
     if (!this.audioContext) {
@@ -199,11 +199,12 @@ export class AudioPlayer {
   }
 
   seek(time: number) {
-    this.stop()
-    this.currentTime = time
-    if (this.isPlaying) {
-      this.play()
-    }
+    this.tracks.forEach(track => {
+      const playbackNode = this.playbackNodes.get(track.id)
+      if (playbackNode) {
+        playbackNode.seek(time)
+      }
+    })
   }
 
   setLoopRegion(start: number, end: number, enabled: boolean) {
@@ -251,5 +252,9 @@ export class AudioPlayer {
 
   public getAudioContext(): AudioContext {
     return this.audioContext
+  }
+
+  getEffectChain(): Effect[] {
+    return this.effectChain
   }
 } 

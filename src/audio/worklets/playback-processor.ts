@@ -15,6 +15,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
       } else if (event.data.type === 'pause') {
         this.isPlaying = false
       } else if (event.data.type === 'seek') {
+        console.log('Seek', event.data.position)
         this.position = event.data.position
       } else if (event.data.type === 'getPosition') {
         this.port.postMessage({ 

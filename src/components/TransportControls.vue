@@ -22,7 +22,7 @@ defineEmits<{
         <button @click="$emit('stop')">Stop</button>
 
         <input type="range" :min="0" :max="duration" :value="currentTime" step="0.1"
-            @input="$emit('seek', parseFloat($event.target.value))" />
+            @input="(e) => $emit('seek', parseFloat((e.target as HTMLInputElement).value))" />
         <span>{{ currentTime.toFixed(1) }} / {{ duration.toFixed(1) }}</span>
     </div>
 </template>
