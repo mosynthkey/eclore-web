@@ -1,79 +1,93 @@
 <script setup lang="ts">
-import AudioPlayer from './components/AudioPlayer.vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useAudioStore } from './stores/audioStore'
+import WaveformView from './components/WaveformView.vue'
+import TransportControls from './components/TransportControls.vue'
+import TrackControls from './components/TrackControls.vue'
+import EffectsPanel from './components/EffectsPanel.vue'
+
+const audioStore = useAudioStore()
+const waveformData = ref<number[]>([])
+
+const initializeApp = () => {
+    audioStore.initialize()
+    isInitialized.value = true
+    waveformData.value = audioStore.player.getWaveformData()
+}
+
+watch(() => audioStore.tracks, () => {
+    waveformData.value = audioStore.player.getWaveformData()
+}, { deep: true })
+
+onBeforeUnmount(() => {
+    audioStore.cleanup()
+})
+
+const isInitialized = ref(false)
+
 </script>
 
 <template>
-  <div class="app">
-    <header>
-      <h1>eclo.re web</h1>
-    </header>
-    
-    <main>
-      <AudioPlayer />
-    </main>
-  </div>
+    <h1>eclo.re web</h1>
+    <div class="audio-player">
+        <div v-if="!isInitialized">
+            <button @click="initializeApp()">Initialize</button>
+        </div>
+        <div v-else-if="audioStore.isLoading" class="loading">
+            Loading...
+        </div>
+
+        <template v-else>
+            <WaveformView :data="waveformData" class="waveform-view" />
+            <TransportControls :is-playing="audioStore.isPlaying" :current-time="audioStore.currentTime"
+                :duration="audioStore.duration" @play="audioStore.play" @pause="audioStore.pause"
+                @stop="audioStore.stop" @seek="audioStore.seek" @toggle-play-pause="audioStore.togglePlayPause" />
+
+            <div class="tracks">
+                <TrackControls v-for="track in audioStore.tracks" :key="track.id" :track="track"
+                    @click="audioStore.setSelectedTrack(track)"
+                    :class="{ selected: audioStore.selectedTrack?.id === track.id }" />
+            </div>
+
+            <EffectsPanel :audio-context="audioStore.player.getAudioContext()" :audio-player="audioStore.player" />
+
+
+        </template>
+    </div>
 </template>
 
-<style>
-:root {
-  --primary-color: #42b883;
-  --bg-color: #242424;
-  --text-color: #fff;
-  --border-color: #444;
+<style scoped>
+.audio-player {
+    padding: 20px;
 }
 
-body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+.tracks {
+    margin-top: 20px;
 }
 
-.app {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+.loop-controls {
+    margin: 1rem 0;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
 }
 
-header {
-  margin-bottom: 2rem;
-  text-align: center;
+.active {
+    background-color: #4CAF50;
+    color: white;
 }
 
-h1 {
-  color: var(--primary-color);
+.selected {
+    border-color: #4CAF50;
 }
 
-button {
-  background-color: var(--primary-color);
-  color: var(--text-color);
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: opacity 0.2s;
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
 }
 
-button:hover {
-  opacity: 0.8;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-input[type="range"] {
-  width: 100%;
-  max-width: 200px;
-}
-
-/* Dark mode optimized styles */
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg-color: #ffffff;
-    --text-color: #213547;
-    --border-color: #ddd;
-  }
+.waveform-view {
+    margin: 20px 0;
 }
 </style>

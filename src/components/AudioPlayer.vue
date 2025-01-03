@@ -30,9 +30,7 @@ onBeforeUnmount(() => {
         </div>
 
         <template v-else>
-            <div>{{ audioStore.currentTime.toFixed(1) }}</div>
-            <div>{{ (audioStore.currentTime / audioStore.duration).toFixed(2) }}</div>
-
+            <WaveformView :data="waveformData" class="waveform-view" />
             <TransportControls :is-playing="audioStore.isPlaying" :current-time="audioStore.currentTime"
                 :duration="audioStore.duration" @play="audioStore.play" @pause="audioStore.pause"
                 @stop="audioStore.stop" @seek="audioStore.seek" @toggle-play-pause="audioStore.togglePlayPause" />
@@ -45,7 +43,7 @@ onBeforeUnmount(() => {
 
             <EffectsPanel :audio-context="audioStore.player.getAudioContext()" :audio-player="audioStore.player" />
 
-            <WaveformView :data="waveformData" class="waveform-view" />
+
         </template>
     </div>
 </template>

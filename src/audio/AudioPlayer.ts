@@ -241,13 +241,11 @@ export class AudioPlayer {
   }
 
   public async initialize(): Promise<void> {
-    if (!this.audioContext) {
-      await this.initAudioContext()
-      await this.loadTrack('Perc.mp3')
-      await this.loadTrack('Stab.mp3')
-      await this.loadTrack('Bass.mp3')
-      await this.loadTrack('Drums.mp3')
-    }
+    await this.initAudioContext()
+    await this.loadTrack('Perc.mp3')
+    await this.loadTrack('Stab.mp3')
+    await this.loadTrack('Bass.mp3')
+    await this.loadTrack('Drums.mp3')
   }
 
   public getAudioContext(): AudioContext {

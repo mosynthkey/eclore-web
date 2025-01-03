@@ -18,10 +18,6 @@ defineEmits<{
             {{ store.isPlaying ? 'Pause' : 'Play' }}
         </button>
         <button @click="store.stop">Stop</button>
-
-        <input type="range" :min="0" :max="store.duration" :value="store.currentTime" step="0.1"
-            @input="(e) => $emit('seek', parseFloat((e.target as HTMLInputElement).value))" />
-        <span>{{ store.currentTime.toFixed(1) }} / {{ store.duration.toFixed(1) }}</span>
     </div>
 </template>
 

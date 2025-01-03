@@ -15,13 +15,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
       } else if (event.data.type === 'pause') {
         this.isPlaying = false
       } else if (event.data.type === 'seek') {
-        this.position = event.data.position
-      } else if (event.data.type === 'getPosition') {
-        this.port.postMessage({ 
-          type: 'position',
-          position: this.position,
-          sampleRate: sampleRate
-        })
+        this.position = Math.trunc(Math.floor(event.data.position) || 0)
       }
     }
   }
@@ -43,15 +37,15 @@ class PlaybackProcessor extends AudioWorkletProcessor {
         }
         outputChannel[i] = bufferChannel[this.position]
         this.position++
-      }
-    }
 
-    if (this.position % 4096 === 0) {
-      this.port.postMessage({ 
-        type: 'position',
-        position: this.position,
-        sampleRate: sampleRate
-      })
+        if (this.position % 128 === 0) {
+          this.port.postMessage({ 
+            type: 'position',
+            position: this.position,
+            sampleRate: sampleRate
+          })
+        }
+      }
     }
 
     return true
