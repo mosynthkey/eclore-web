@@ -24,7 +24,7 @@ const updateParameter = (effect: Effect, param: EffectParameter, value: number) 
             <div class="effect-header">
                 <label>
                     <input type="checkbox" :checked="!effect.bypass"
-                        @change="e => toggleEffect(effect.name, !e.target.checked)" />
+                        @change="e => toggleEffect(effect.name, !((e.target as HTMLInputElement)?.checked))" />
                     {{ effect.name }}
                 </label>
             </div>
@@ -33,7 +33,8 @@ const updateParameter = (effect: Effect, param: EffectParameter, value: number) 
                 <div v-for="param in effect.parameters" :key="param.name" class="param-control">
                     <label>{{ param.name }}</label>
                     <input type="range" :min="param.min" :max="param.max" :step="(param.max - param.min) / 100"
-                        :value="param.value" @input="e => updateParameter(effect, param, Number(e.target.value))" />
+                        :value="param.value"
+                        @input="e => updateParameter(effect, param, Number((e.target as HTMLInputElement)?.value))" />
                     <span class="param-value">{{ param.value.toFixed(2) }}</span>
                 </div>
             </div>

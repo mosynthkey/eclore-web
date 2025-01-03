@@ -18,19 +18,21 @@ interface AudioWorkletProcessor {
 }
 
 class TapeStopProcessor extends AudioWorkletProcessor {
-  private buffer: Float32Array[][] = [[], []]
+  private buffer: Float32Array[]
   private readPosition = 0
   private writePosition = 0
   private isActive = false
   private rate = 1.0
-  private isSlowdown = false;
+  private isSlowdown = false
 
   constructor() {
     super()
     
     const bufferLength = sampleRate * 10
-    this.buffer[0] = new Float32Array(bufferLength)
-    this.buffer[1] = new Float32Array(bufferLength)
+    this.buffer = [
+      new Float32Array(bufferLength),
+      new Float32Array(bufferLength)
+    ]
 
     this.port.onmessage = (event: MessageEvent) => {
       if (event.data.type === 'trigger') {

@@ -1,4 +1,4 @@
-import type { Track, LoopRegion } from '../types/audio'
+import type { Track, LoopRegion, EffectParameter } from '../types/audio'
 import { PlaybackNode } from './worklets/playback-node'
 import { DistortionNode } from './worklets/distortion-node'
 import { DecimatorNode } from './worklets/decimator-node'
@@ -11,7 +11,7 @@ import { TapeStopNode } from './worklets/tape-stop-node'
 
 interface Effect {
   name: string;
-  node: AudioNode | ReverbNode;
+  node: AudioNode;
   bypass: boolean;
   output?: AudioNode;
   bypassGain?: GainNode;

@@ -1,10 +1,10 @@
 export class ReverbNode {
-  private context: AudioContext
   private input: GainNode
   private output: GainNode
   private wetGain: GainNode
   private dryGain: GainNode
   private convolver: ConvolverNode
+  private context: AudioContext
 
   constructor(context: AudioContext) {
     this.context = context
@@ -29,7 +29,7 @@ export class ReverbNode {
   }
 
   private async createDefaultImpulseResponse() {
-    const length = this.context.sampleRate * 10 // 10 seconds of reverb
+    const length = this.context.sampleRate * 4 // 4 seconds of reverb
     const impulse = this.context.createBuffer(2, length, this.context.sampleRate)
     
     for (let channel = 0; channel < 2; channel++) {
@@ -43,8 +43,8 @@ export class ReverbNode {
   }
 
   setMix(value: number) {
-    const wetGain = 0.5 * value
-    const dryGain = 0.5 - (1 - value) * 0.5
+    const wetGain = value
+    const dryGain = 1 - value
     
     this.wetGain.gain.setValueAtTime(wetGain, this.context.currentTime)
     this.dryGain.gain.setValueAtTime(dryGain, this.context.currentTime)
