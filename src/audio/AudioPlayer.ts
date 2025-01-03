@@ -67,7 +67,7 @@ export class AudioPlayer {
                 name: 'Drive',
                 value: 1,
                 min: 1,
-                max: 100,
+                max: 8,
                 default: 1
               }
             ]
@@ -88,7 +88,7 @@ export class AudioPlayer {
               },
               {
                 name: 'Rate',
-                value: 1,
+                value: 0.2,
                 min: 0.01,
                 max: 1,
                 default: 1

@@ -19,7 +19,7 @@ interface AudioWorkletProcessor {
 
 class DecimatorProcessor extends AudioWorkletProcessor {
   private bits = 16
-  private rate = 1
+  private rate = 0.2
   private lastSample = 0
   private skipCounter = 0
 
