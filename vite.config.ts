@@ -13,6 +13,7 @@ export default defineConfig({
   },
   assetsInclude: ['**/*.mp3'],
   build: {
+    outDir: 'docs',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -43,5 +44,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['src/audio/worklets/*']
-  }
+  },
+  base: './',
 })
