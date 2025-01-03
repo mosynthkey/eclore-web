@@ -1,42 +1,51 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useAudioStore } from '../stores/audioStore'
-import TrackControls from './TrackControls.vue'
+import WaveformView from './WaveformView.vue'
 import TransportControls from './TransportControls.vue'
+import TrackControls from './TrackControls.vue'
 import EffectsPanel from './EffectsPanel.vue'
 
-const store = useAudioStore()
+const audioStore = useAudioStore()
+const waveformData = ref<number[]>([])
 
 onMounted(async () => {
-    await store.initialize()
+    await audioStore.initialize()
+    waveformData.value = audioStore.player.getWaveformData()
 })
 
+watch(() => audioStore.tracks, () => {
+    waveformData.value = audioStore.player.getWaveformData()
+}, { deep: true })
+
 onBeforeUnmount(() => {
-    store.cleanup()
+    audioStore.cleanup()
 })
 </script>
 
 <template>
     <div class="audio-player">
-        <div v-if="store.isLoading" class="loading">
+        <div v-if="audioStore.isLoading" class="loading">
             Loading...
         </div>
 
         <template v-else>
-            <div>{{ store.currentTime.toFixed(1) }}</div>
-            <div>{{ (store.currentTime / store.duration).toFixed(2) }}</div>
+            <div>{{ audioStore.currentTime.toFixed(1) }}</div>
+            <div>{{ (audioStore.currentTime / audioStore.duration).toFixed(2) }}</div>
 
-            <TransportControls :is-playing="store.isPlaying" :current-time="store.currentTime"
-                :duration="store.duration" @play="store.play" @pause="store.pause" @stop="store.stop" @seek="store.seek"
-                @toggle-play-pause="store.togglePlayPause" />
+            <TransportControls :is-playing="audioStore.isPlaying" :current-time="audioStore.currentTime"
+                :duration="audioStore.duration" @play="audioStore.play" @pause="audioStore.pause"
+                @stop="audioStore.stop" @seek="audioStore.seek" @toggle-play-pause="audioStore.togglePlayPause" />
 
             <div class="tracks">
-                <TrackControls v-for="track in store.tracks" :key="track.id" :track="track"
-                    @click="store.setSelectedTrack(track)"
-                    :class="{ selected: store.selectedTrack?.id === track.id }" />
+                <TrackControls v-for="track in audioStore.tracks" :key="track.id" :track="track"
+                    @click="audioStore.setSelectedTrack(track)"
+                    :class="{ selected: audioStore.selectedTrack?.id === track.id }" />
             </div>
 
-            <EffectsPanel :audio-context="store.player.getAudioContext()" :audio-player="store.player" />
+            <EffectsPanel :audio-context="audioStore.player.getAudioContext()" :audio-player="audioStore.player" />
+
+            <WaveformView :data="waveformData" class="waveform-view" />
         </template>
     </div>
 </template>
@@ -70,5 +79,9 @@ onBeforeUnmount(() => {
     text-align: center;
     padding: 2rem;
     color: #666;
+}
+
+.waveform-view {
+    margin: 20px 0;
 }
 </style>

@@ -257,4 +257,29 @@ export class AudioPlayer {
   getEffectChain(): Effect[] {
     return this.effectChain
   }
+
+  getWaveformData(): number[] {
+    if (this.tracks.length === 0) return []
+    
+    const track = this.tracks[0]
+    if (!track.buffer) return []
+    
+    const channel = track.buffer.getChannelData(0)
+    const samples = 1000 // 表示用のサンプル数
+    const blockSize = Math.floor(channel.length / samples)
+    const waveform = []
+    
+    for (let i = 0; i < samples; i++) {
+      const start = i * blockSize
+      let sum = 0
+      
+      for (let j = 0; j < blockSize && (start + j) < channel.length; j++) {
+        sum += Math.abs(channel[start + j])
+      }
+      
+      waveform.push(sum / blockSize)
+    }
+    
+    return waveform
+  }
 } 
