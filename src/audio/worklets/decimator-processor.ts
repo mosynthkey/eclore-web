@@ -18,30 +18,47 @@ interface AudioWorkletProcessor {
 }
 
 class DecimatorProcessor extends AudioWorkletProcessor {
-  private skipSamples = 0;
-  private lastSample = 0;
-  
-  process(inputs: Float32Array[][], outputs: Float32Array[][]) {
-    const input = inputs[0];
-    const output = outputs[0];
-    
-    for (let channel = 0; channel < input.length; channel++) {
-      const inputChannel = input[channel];
-      const outputChannel = output[channel];
-      
-      for (let i = 0; i < inputChannel.length; i++) {
-        if (this.skipSamples <= 0) {
-          this.lastSample = inputChannel[i];
-          this.skipSamples = 4;
-        } else {
-          this.skipSamples--;
-        }
-        outputChannel[i] = this.lastSample;
+  private bits = 16
+  private rate = 1
+  private lastSample = 0
+  private skipCounter = 0
+
+  constructor() {
+    super()
+    this.port.onmessage = (event: MessageEvent) => {
+      if (event.data.type === 'setBits') {
+        this.bits = event.data.value
+      } else if (event.data.type === 'setRate') {
+        this.rate = event.data.value
       }
     }
-    
-    return true;
+  }
+
+  process(inputs: Float32Array[][], outputs: Float32Array[][]) {
+    const input = inputs[0]
+    const output = outputs[0]
+
+    for (let channel = 0; channel < input.length; channel++) {
+      const inputChannel = input[channel]
+      const outputChannel = output[channel]
+
+      for (let i = 0; i < inputChannel.length; i++) {
+        // レート削減
+        if (this.skipCounter <= 0) {
+          // ビット深度削減
+          const step = 2 ** (this.bits - 1)
+          this.lastSample = Math.round(inputChannel[i] * step) / step
+          this.skipCounter = Math.floor(1 / this.rate)
+        } else {
+          this.skipCounter--
+        }
+        outputChannel[i] = this.lastSample
+      }
+    }
+
+    return true
   }
 }
 
-registerProcessor('decimator-processor', DecimatorProcessor); 
+registerProcessor('decimator-processor', DecimatorProcessor)
+export default {} 

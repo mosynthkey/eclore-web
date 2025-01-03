@@ -18,6 +18,9 @@ defineEmits<{
             {{ store.isPlaying ? 'Pause' : 'Play' }}
         </button>
         <button @click="store.stop">Stop</button>
+        <button @click="store.triggerTapeStop()" class="tape-stop-button">
+            Tape FX
+        </button>
     </div>
 </template>
 

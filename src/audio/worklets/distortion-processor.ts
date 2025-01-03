@@ -18,6 +18,17 @@ interface AudioWorkletProcessor {
 }
 
 class DistortionProcessor extends AudioWorkletProcessor {
+  private drive = 1
+
+  constructor() {
+    super()
+    this.port.onmessage = (event: MessageEvent) => {
+      if (event.data.type === 'setDrive') {
+        this.drive = event.data.value
+      }
+    }
+  }
+
   process(inputs: Float32Array[][], outputs: Float32Array[][]) {
     const input = inputs[0]
     const output = outputs[0]
@@ -27,7 +38,8 @@ class DistortionProcessor extends AudioWorkletProcessor {
       const outputChannel = output[channel]
 
       for (let i = 0; i < inputChannel.length; i++) {
-        outputChannel[i] = Math.tanh(inputChannel[i])
+        const x = inputChannel[i] * this.drive
+        outputChannel[i] = Math.tanh(x)
       }
     }
 
@@ -35,4 +47,5 @@ class DistortionProcessor extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('distortion-processor', DistortionProcessor) 
+registerProcessor('distortion-processor', DistortionProcessor)
+export default {} 

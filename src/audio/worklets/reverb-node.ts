@@ -1,59 +1,60 @@
-export class ReverbNode extends ConvolverNode {
-  private wetGain: GainNode;
-  private dryGain: GainNode;
-  private input: GainNode;
-  private output: GainNode;
+export class ReverbNode {
+  private context: AudioContext
+  private input: GainNode
+  private output: GainNode
+  private wetGain: GainNode
+  private dryGain: GainNode
+  private convolver: ConvolverNode
 
   constructor(context: AudioContext) {
-    super(context);
-    
-    this.wetGain = context.createGain();
-    this.dryGain = context.createGain();
-    this.input = context.createGain();
-    this.output = context.createGain();
+    this.context = context
+    this.input = context.createGain()
+    this.output = context.createGain()
+    this.wetGain = context.createGain()
+    this.dryGain = context.createGain()
+    this.convolver = context.createConvolver()
 
-    this.createDefaultImpulseResponse(context);
+    // Create default impulse response
+    this.createDefaultImpulseResponse()
 
-    this.input.connect(this);
-    this.connect(this.wetGain);
-    
-    this.input.connect(this.dryGain); 
-    
-    this.wetGain.connect(this.output);
-    this.dryGain.connect(this.output);
+    // Set up signal path
+    this.input.connect(this.convolver)
+    this.convolver.connect(this.wetGain)
+    this.input.connect(this.dryGain)
+    this.wetGain.connect(this.output)
+    this.dryGain.connect(this.output)
 
-    this.wetGain.gain.value = 0.7;  // 70% wet
-    this.dryGain.gain.value = 0.3;  // 30% dry
+    // Default Dry/Wet setting
+    this.setMix(0.5) // 50/50 mix
   }
 
-  private async createDefaultImpulseResponse(context: AudioContext) {
-    // Create a simple impulse response
-    const length = context.sampleRate * 2.0; // 2 seconds
-    const impulse = context.createBuffer(2, length, context.sampleRate);
+  private async createDefaultImpulseResponse() {
+    const length = this.context.sampleRate * 10 // 10 seconds of reverb
+    const impulse = this.context.createBuffer(2, length, this.context.sampleRate)
     
     for (let channel = 0; channel < 2; channel++) {
-      const channelData = impulse.getChannelData(channel);
+      const channelData = impulse.getChannelData(channel)
       for (let i = 0; i < length; i++) {
-        channelData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (length * 0.2));
+        channelData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (length * 0.1))
       }
     }
-    
-    this.buffer = impulse;
+
+    this.convolver.buffer = impulse
   }
 
-  public getInput(): AudioNode {
-    return this.input;
+  setMix(value: number) {
+    const wetGain = 0.5 * value
+    const dryGain = 0.5 - (1 - value) * 0.5
+    
+    this.wetGain.gain.setValueAtTime(wetGain, this.context.currentTime)
+    this.dryGain.gain.setValueAtTime(dryGain, this.context.currentTime)
   }
 
-  public getOutput(): AudioNode {
-    return this.output;
+  getInput(): AudioNode {
+    return this.input
   }
-  
-  public setMix(wetAmount: number) {
-    const wet = Math.min(1, Math.max(0, wetAmount));
-    const dry = 1 - wet;
-    
-    this.wetGain.gain.setValueAtTime(wet, this.context.currentTime);
-    this.dryGain.gain.setValueAtTime(dry, this.context.currentTime);
+
+  getOutput(): AudioNode {
+    return this.output
   }
 } 

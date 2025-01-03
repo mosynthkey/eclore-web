@@ -31,7 +31,7 @@ const isInitialized = ref(false)
     <h1>eclo.re web</h1>
     <div class="audio-player">
         <div v-if="!isInitialized">
-            <button @click="initializeApp()">Initialize</button>
+            <button @click="initializeApp()">Start</button>
         </div>
         <div v-else-if="audioStore.isLoading" class="loading">
             Loading...

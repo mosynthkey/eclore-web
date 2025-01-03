@@ -7,14 +7,16 @@ import bass from '../assets/music/demo/Bass.mp3'
 import drums from '../assets/music/demo/Drums.mp3'
 import perc from '../assets/music/demo/Perc.mp3'
 import stab from '../assets/music/demo/Stab.mp3'
+import { TapeStopNode } from './worklets/tape-stop-node'
 
 interface Effect {
   name: string;
-  node: AudioNode;
+  node: AudioNode | ReverbNode;
   bypass: boolean;
   output?: AudioNode;
   bypassGain?: GainNode;
   wetGain?: GainNode;
+  parameters?: EffectParameter[];
 }
 
 export class AudioPlayer {
@@ -32,6 +34,7 @@ export class AudioPlayer {
   private playbackNodes: Map<number, PlaybackNode> = new Map()
   private mixBus: GainNode | null = null
   public effectChain: Effect[] = []
+  private reverbNode: ReverbNode | null = null
 
   async initAudioContext() {
     if (!this.audioContext) {
@@ -42,12 +45,15 @@ export class AudioPlayer {
         await this.audioContext.audioWorklet.addModule('/src/audio/worklets/playback-processor.ts')
         await this.audioContext.audioWorklet.addModule('/src/audio/worklets/distortion-processor.ts')
         await this.audioContext.audioWorklet.addModule('/src/audio/worklets/decimator-processor.ts')
+        await this.audioContext.audioWorklet.addModule('/src/audio/worklets/tape-stop-processor.ts')
         
         this.mixBus = this.audioContext.createGain()
         
         const distortion = new DistortionNode(this.audioContext)
         const decimator = new DecimatorNode(this.audioContext)
         const reverb = new ReverbNode(this.audioContext)
+        const tapeStop = new TapeStopNode(this.audioContext)
+        this.reverbNode = reverb
         
         this.effectChain = [
           {
@@ -55,14 +61,39 @@ export class AudioPlayer {
             node: distortion,
             bypass: true,
             bypassGain: this.audioContext.createGain(),
-            wetGain: this.audioContext.createGain()
+            wetGain: this.audioContext.createGain(),
+            parameters: [
+              {
+                name: 'Drive',
+                value: 1,
+                min: 1,
+                max: 100,
+                default: 1
+              }
+            ]
           },
           {
             name: 'Decimator',
             node: decimator,
             bypass: true,
             bypassGain: this.audioContext.createGain(),
-            wetGain: this.audioContext.createGain()
+            wetGain: this.audioContext.createGain(),
+            parameters: [
+              {
+                name: 'Bits',
+                value: 16,
+                min: 1,
+                max: 16,
+                default: 16
+              },
+              {
+                name: 'Rate',
+                value: 1,
+                min: 0.01,
+                max: 1,
+                default: 1
+              }
+            ]
           },
           {
             name: 'Reverb',
@@ -70,7 +101,24 @@ export class AudioPlayer {
             output: reverb.getOutput(),
             bypass: true,
             bypassGain: this.audioContext.createGain(),
-            wetGain: this.audioContext.createGain()
+            wetGain: this.audioContext.createGain(),
+            parameters: [
+              {
+                name: 'Dry/Wet',
+                value: 0.5,
+                min: 0,
+                max: 1,
+                default: 0.5
+              }
+            ]
+          },
+          {
+            name: 'TapeStop',
+            node: tapeStop,
+            bypass: false,
+            bypassGain: this.audioContext.createGain(),
+            wetGain: this.audioContext.createGain(),
+            parameters: []
           }
         ]
         
@@ -308,5 +356,40 @@ export class AudioPlayer {
     }
     
     return waveform
+  }
+
+  updateEffectParameter(effectName: string, paramName: string, value: number) {
+    const effect = this.effectChain.find(e => e.name === effectName)
+    if (!effect) return
+
+    const param = effect.parameters?.find(p => p.name === paramName)
+    if (!param) return
+
+    param.value = value
+
+    switch (effectName) {
+      case 'Distortion':
+        (effect.node as DistortionNode).setDrive(value)
+        break
+      case 'Decimator':
+        if (paramName === 'Bits') {
+          (effect.node as DecimatorNode).setBits(value)
+        } else if (paramName === 'Rate') {
+          (effect.node as DecimatorNode).setRate(value)
+        }
+        break
+      case 'Reverb':
+        if (paramName === 'Dry/Wet' && this.reverbNode) {
+          this.reverbNode.setMix(value)
+        }
+        break
+    }
+  }
+
+  triggerTapeStop() {
+    const effect = this.effectChain.find(e => e.name === 'TapeStop')
+    if (effect && !effect.bypass) {
+      (effect.node as TapeStopNode).trigger()
+    }
   }
 } 

@@ -3,7 +3,22 @@ export class DecimatorNode extends AudioWorkletNode {
     super(context, 'decimator-processor', {
       numberOfInputs: 1,
       numberOfOutputs: 1,
-      channelCount: 2
+      channelCount: 2,
+      channelCountMode: 'explicit'
+    });
+  }
+
+  setBits(value: number) {
+    this.port.postMessage({
+      type: 'setBits',
+      value: value
+    });
+  }
+
+  setRate(value: number) {
+    this.port.postMessage({
+      type: 'setRate',
+      value: value
     });
   }
 }

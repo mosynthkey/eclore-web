@@ -4,6 +4,14 @@ export class DistortionNode extends AudioWorkletNode {
       numberOfInputs: 1,
       numberOfOutputs: 1,
       channelCount: 2,
+      channelCountMode: 'explicit'
+    })
+  }
+
+  setDrive(value: number) {
+    this.port.postMessage({
+      type: 'setDrive',
+      value: value
     })
   }
 }

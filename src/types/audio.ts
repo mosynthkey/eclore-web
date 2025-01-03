@@ -20,4 +20,22 @@ export interface LoopRegion {
   start: number
   end: number
   enabled: boolean
+}
+
+export interface EffectParameter {
+  name: string;
+  value: number;
+  min: number;
+  max: number;
+  default: number;
+}
+
+export interface Effect {
+  name: string;
+  node: AudioNode;
+  bypass: boolean;
+  output?: AudioNode;
+  bypassGain?: GainNode;
+  wetGain?: GainNode;
+  parameters?: EffectParameter[];
 } 

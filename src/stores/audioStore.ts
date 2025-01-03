@@ -66,6 +66,14 @@ export const useAudioStore = defineStore('audio', {
 
     cleanup() {
       this.player.cleanup()
+    },
+
+    updateEffectParameter(effectName: string, paramName: string, value: number) {
+      this.player.updateEffectParameter(effectName, paramName, value)
+    },
+
+    triggerTapeStop() {
+      this.player.triggerTapeStop()
     }
   },
 
