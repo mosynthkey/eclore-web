@@ -21,6 +21,7 @@ interface Effect {
 
 export class AudioPlayer {
   private audioContext: AudioContext | null = null
+  private analyser: AnalyserNode | null = null
   private tracks: Track[] = []
   private isPlaying = false
   private currentTime = 0
@@ -48,6 +49,8 @@ export class AudioPlayer {
         await this.audioContext.audioWorklet.addModule('/src/audio/worklets/tape-stop-processor.ts')
         
         this.mixBus = this.audioContext.createGain()
+        this.analyser = this.audioContext.createAnalyser()
+        this.analyser.fftSize = 2048
         
         const distortion = new DistortionNode(this.audioContext)
         const decimator = new DecimatorNode(this.audioContext)
@@ -142,7 +145,9 @@ export class AudioPlayer {
           previousNode = nextNode
         })
         
-        previousNode.connect(this.audioContext.destination)
+        previousNode.connect(this.analyser)
+        this.analyser.connect(this.audioContext.destination)
+        this.analyser.connect(this.audioContext.destination)
 
         this.effectChain.forEach(effect => this.updateEffectBypass(effect))
       } catch (error) {
@@ -391,5 +396,20 @@ export class AudioPlayer {
     if (effect && !effect.bypass) {
       (effect.node as TapeStopNode).trigger()
     }
+  }
+
+  getCurrentVolume(): number {
+    if (!this.analyser) return 0
+
+    const dataArray = new Uint8Array(this.analyser.frequencyBinCount)
+    this.analyser.getByteTimeDomainData(dataArray)
+
+    // 音量を計算（RMS）
+    let sum = 0
+    for (let i = 0; i < dataArray.length; i++) {
+      const normalized = (dataArray[i] - 128) / 128
+      sum += normalized * normalized
+    }
+    return Math.sqrt(sum / dataArray.length)
   }
 } 

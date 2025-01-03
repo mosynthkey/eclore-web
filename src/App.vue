@@ -5,6 +5,7 @@ import WaveformView from './components/WaveformView.vue'
 import TransportControls from './components/TransportControls.vue'
 import TrackControls from './components/TrackControls.vue'
 import EffectsPanel from './components/EffectsPanel.vue'
+import VisualEffect from './components/VisualEffect.vue'
 
 const audioStore = useAudioStore()
 const waveformData = ref<number[]>([])
@@ -39,6 +40,7 @@ const isInitialized = ref(false)
 
         <template v-else>
             <WaveformView :data="waveformData" class="waveform-view" />
+            <VisualEffect />
             <TransportControls :is-playing="audioStore.isPlaying" :current-time="audioStore.currentTime"
                 :duration="audioStore.duration" @play="audioStore.play" @pause="audioStore.pause"
                 @stop="audioStore.stop" @seek="audioStore.seek" @toggle-play-pause="audioStore.togglePlayPause" />
