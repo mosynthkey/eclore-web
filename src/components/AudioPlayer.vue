@@ -1,57 +1,42 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import type { Track } from '../types/audio'
-import { AudioPlayer } from '../audio/AudioPlayer'
+import { onMounted, onBeforeUnmount } from 'vue'
+import { useAudioStore } from '../stores/audioStore'
 import TrackControls from './TrackControls.vue'
 import TransportControls from './TransportControls.vue'
 import EffectsPanel from './EffectsPanel.vue'
 
-const player = new AudioPlayer()
-const selectedTrack = ref<Track | null>(null)
-const isLoading = ref(true)
-const currentPlayingTime = ref(0)
-const currentPlayingTimeRatio = ref(0)
+const store = useAudioStore()
 
 onMounted(async () => {
-    try {
-        await player.initialize()
-        isLoading.value = false;
-
-        // timer
-        setInterval(() => {
-            currentPlayingTime.value = player.getCurrentTime()
-            currentPlayingTimeRatio.value = currentPlayingTime.value / player.getDuration()
-        }, 100);
-
-    } catch (error) {
-        console.error('Failed to initialize audio player:', error)
-    }
+    await store.initialize()
 })
 
 onBeforeUnmount(() => {
-    player.cleanup()
+    store.cleanup()
 })
 </script>
 
 <template>
     <div class="audio-player">
-        <div v-if="isLoading" class="loading">
+        <div v-if="store.isLoading" class="loading">
             Loading...
         </div>
 
         <template v-else>
-            <div>{{ currentPlayingTime }}</div>
-            <div>{{ currentPlayingTimeRatio }}</div>
-            <TransportControls :is-playing="player.getIsPlaying()" :current-time="player.getCurrentTime()"
-                :duration="player.getDuration()" @play="player.play()" @pause="player.pause()" @stop="player.stop()"
-                @seek="(time) => player.seek(time)" @toggle-play-pause="player.togglePlayPause()" />
+            <div>{{ store.currentTime.toFixed(1) }}</div>
+            <div>{{ (store.currentTime / store.duration).toFixed(2) }}</div>
+
+            <TransportControls :is-playing="store.isPlaying" :current-time="store.currentTime"
+                :duration="store.duration" @play="store.play" @pause="store.pause" @stop="store.stop" @seek="store.seek"
+                @toggle-play-pause="store.togglePlayPause" />
 
             <div class="tracks">
-                <TrackControls v-for="track in player.getTracks()" :key="track.id" :track="track"
-                    @click="selectedTrack = track" :class="{ selected: selectedTrack?.id === track.id }" />
+                <TrackControls v-for="track in store.tracks" :key="track.id" :track="track"
+                    @click="store.setSelectedTrack(track)"
+                    :class="{ selected: store.selectedTrack?.id === track.id }" />
             </div>
 
-            <EffectsPanel :audio-context="player.getAudioContext()" :audio-player="player" />
+            <EffectsPanel :audio-context="store.player.getAudioContext()" :audio-player="store.player" />
         </template>
     </div>
 </template>
