@@ -53,10 +53,14 @@ const draw = () => {
     ctx.fillStyle = '#111'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    const centerX = canvas.width / 2
-    const centerY = canvas.height / 2
+    const centerX = canvas.width / 2 || 0
+    const centerY = canvas.height / 2 || 0
     const baseRadius = 50
     const currentRadius = baseRadius + currentVolume.value * maxRadius
+
+    if (!isFinite(centerX) || !isFinite(centerY) || !isFinite(currentRadius)) {
+        return
+    }
 
     // Draw circle history
     circleHistory.value.forEach(circle => {

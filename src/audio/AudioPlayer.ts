@@ -43,10 +43,10 @@ export class AudioPlayer {
       try {
         console.log(this.audioContext);
         console.log(this.audioContext.audioWorklet);
-        await this.audioContext.audioWorklet.addModule('/src/audio/worklets/playback-processor.ts')
-        await this.audioContext.audioWorklet.addModule('/src/audio/worklets/distortion-processor.ts')
-        await this.audioContext.audioWorklet.addModule('/src/audio/worklets/decimator-processor.ts')
-        await this.audioContext.audioWorklet.addModule('/src/audio/worklets/tape-stop-processor.ts')
+        await this.audioContext.audioWorklet.addModule('./src/audio/worklets/playback-processor.ts')
+        await this.audioContext.audioWorklet.addModule('./src/audio/worklets/distortion-processor.ts')
+        await this.audioContext.audioWorklet.addModule('./src/audio/worklets/decimator-processor.ts')
+        await this.audioContext.audioWorklet.addModule('./src/audio/worklets/tape-stop-processor.ts')
         
         this.mixBus = this.audioContext.createGain()
         this.analyser = this.audioContext.createAnalyser()
